@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#c47c00">
+<title>Bilancio Eventi</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0f0f1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#fff;min-height:100vh}
+.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.appbar{background:linear-gradient(135deg,#c47c00,#8b4800);padding:max(env(safe-area-inset-top),14px) 20px 16px;text-align:center}
+.appbar-title{color:#fff;font-size:22px;font-weight:900;margin-top:2px}
+.appbar-sub{color:#ffe8a0;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:2px}
+.tabs{display:flex;background:#1e1e30;border-bottom:1px solid #2a2a3e;flex-shrink:0}
+.tab{flex:1;padding:12px 0;border:none;background:transparent;color:#666;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px}
+.tab.active{background:#c47c00;color:#fff}
+.content{flex:1;padding:16px;overflow-y:auto;padding-bottom:max(env(safe-area-inset-bottom),16px)}
+.lbl{color:#c47c00;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px}
+.note{color:#888;font-size:13px;margin-bottom:14px}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px}
+.btn.am{background:linear-gradient(135deg,#c47c00,#8b4800);color:#fff}
+.btn.sm{padding:8px 14px;font-size:13px;width:auto;margin-bottom:0}
+.btn.out{background:transparent;color:#c47c00;border:2px solid #c47c00}
+.btn.red{background:#993333;color:#fff}
+.btn.gray{background:#2a2a3e;color:#aaa;border:none}
+.card{background:#1e1e30;border-radius:14px;padding:14px 16px;margin-bottom:10px;border-left:3px solid transparent}
+.card.amber{border-left-color:#c47c00}
+.card.green{border-left-color:#4caf50}
+.card.red{border-left-color:#f66}
+.card-row{display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:16px;font-weight:700}
+.card-sub{font-size:12px;color:#888;margin-top:3px}
+.tbox{background:#2a1a00;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.tlbl{color:#c47c00;font-weight:700;font-size:14px}
+.tamt{font-size:26px;font-weight:900}
+.tamt.pos{color:#4caf50}
+.tamt.neg{color:#f66}
+.tamt.neu{color:#ffe8a0}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#1e1e30;border-radius:20px;padding:24px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto}
+.modal-title{color:#c47c00;font-weight:700;font-size:12px;letter-spacing:2px;margin-bottom:14px}
+.inp{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #3a3a50;background:#2a2a3e;color:#fff;font-size:15px;margin-bottom:10px;box-sizing:border-box}
+.inp:focus{outline:none;border-color:#c47c00}
+.row2{display:flex;gap:8px}
+.row2 .inp{flex:1}
+.sep{border:none;border-top:1px solid #2a2a3e;margin:12px 0}
+.voce-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1a1a28}
+.voce-nome{font-size:14px;font-weight:600}
+.voce-cat{font-size:11px;color:#888;margin-top:2px}
+.voce-imp{font-size:15px;font-weight:800}
+.voce-imp.pos{color:#4caf50}
+.voce-imp.neg{color:#f66}
+.detail-section{background:#161620;border-radius:10px;padding:10px 12px;margin-top:8px}
+.ev-summary{display:flex;gap:16px;margin-top:8px}
+.ev-stat{flex:1;text-align:center}
+.ev-stat-val{font-size:16px;font-weight:800}
+.ev-stat-lbl{font-size:10px;color:#888;margin-top:2px}
+select.inp{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c47c00' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.empty{text-align:center;padding:40px 20px;color:#555}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-txt{font-size:14px;line-height:1.6}
+.anno-sel{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.anno-chip{padding:7px 16px;border-radius:20px;border:2px solid #2a2a3e;background:transparent;color:#666;font-size:13px;font-weight:700;cursor:pointer}
+.anno-chip.active{border-color:#c47c00;color:#c47c00;background:#2a1a00}
+.expand-btn{background:none;border:none;color:#c47c00;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0}
+.modal-btn-row{display:flex;gap:8px}
+.modal-btn-row .btn{margin-bottom:0}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="appbar" style="position:relative">
+    <div class="appbar-sub" id="appSub">Gruppo Sportivo Loranzé</div>
+    <div class="appbar-title"><span id="appEmoji">📒</span> <span id="appTitolo">Bilancio Eventi</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px">
+      <div id="syncDot" style="width:7px;height:7px;border-radius:50%;background:#555" title="Connessione…"></div>
+      <span style="color:rgba(255,255,255,.4);font-size:9px">v1.0.0</span>
+    </div>
+    <button onclick="apriIntestazione()" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:rgba(0,0,0,.25);border:none;color:#ffe8a0;font-size:16px;width:32px;height:32px;border-radius:50%;cursor:pointer">✏️</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="t-eventi"  onclick="go('eventi')">📅 EVENTI</button>
+    <button class="tab"        id="t-bilancio" onclick="go('bilancio')">📊 BILANCIO</button>
+    <button class="tab"        id="t-cat"      onclick="go('cat')">🏷️ CATEGORIE</button>
+  </div>
+  <div class="content" id="ct"></div>
+</div>
+
+<div class="overlay" id="overlay" style="display:none" onclick="closeBg(event)">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+// ── Storage locale ────────────────────────────────────────────────
+function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function ss(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+let categorie    = ls('be_cat', ['Incasso bar','Incasso cucina','Biglietti','Spese organizzazione','Spese materiali','Sponsor','Altro']);
+let eventi       = ls('be_eventi', []);
+let intestazione = ls('be_intestazione', ['Gruppo Sportivo Loranzé','Via della Villa, 34 Loranzé (TO)']);
+let titoloApp    = localStorage.getItem('be_titolo') || 'Bilancio Eventi';
+let emojiApp     = localStorage.getItem('be_emoji')  || '📒';
+let tab          = 'eventi';
+let expanded     = {};
+let annoSel      = null;
+let enteSel      = null; // ente selezionato correntemente
+let _tmpLines    = [];
+let _tmpTitolo   = '';
+let _tmpEmoji    = '';
+
+// Helper enti: intestazione = lista enti
+function getEnti(){ return intestazione.filter(e=>e.trim()); }
+function getEnteSel(){ 
+  const enti=getEnti();
+  if(!enti.length) return null;
+  if(!enteSel||!enti.includes(enteSel)) enteSel=enti[0];
+  return enteSel;
+}
+
+// Firebase viene iniettato da fuori dopo il caricamento
+let _fbSalva = null;
+let _fbCoda  = null;
+
+// Stato corrente — sempre aggiornato (usato da Firebase)
+window._getStato = ()=>({categorie,eventi,intestazione,titoloApp,emojiApp});
+
+function salva(){
+  salvaLocale();
+  // Prende stato AGGIORNATO al momento della chiamata
+  const stato = window._getStato();
+  if(_fbSalva){
+    _fbSalva(stato);
+  } else {
+    _fbCoda = stato; // sovrascrive: teniamo solo l'ultimo
+  }
+}
+
+// Chiamata dal modulo Firebase quando è pronto
+window._fbPronto = (fn)=>{
+  _fbSalva = fn;
+  if(_fbCoda){
+    // Stato potrebbe essere cambiato: prendi quello attuale
+    _fbSalva(window._getStato());
+    _fbCoda = null;
+  }
+};
+function setSyncStatus(s){
+  const el=document.getElementById('syncDot');
+  if(!el)return;
+  const M={ok:['#4caf50','Sincronizzato'],saving:['#f0a800','Salvataggio…'],err:['#f66','Offline']};
+  el.style.background=M[s][0];
+  el.title=M[s][1];
+}
+
+// ── OPFS backup silenzioso ────────────────────────────────────────
+async function saveOPFS(){
+  try{
+    const root=await navigator.storage.getDirectory();
+    const fh=await root.getFileHandle('bilancio_backup.json',{create:true});
+    const w=await fh.createWritable();
+    await w.write(JSON.stringify({categorie,eventi,intestazione,titoloApp,emojiApp,savedAt:new Date().toISOString()}));
+    await w.close();
+  }catch{}
+}
+async function leggiOPFS(){
+  try{
+    const root=await navigator.storage.getDirectory();
+    const fh=await root.getFileHandle('bilancio_backup.json');
+    const file=await fh.getFile();
+    return JSON.parse(await file.text());
+  }catch{return null;}
+}
+
+// ── Salva ─────────────────────────────────────────────────────────
+function salvaLocale(){
+  ss('be_cat',categorie);
+  ss('be_eventi',eventi);
+  ss('be_intestazione',intestazione);
+  localStorage.setItem('be_titolo',titoloApp);
+  localStorage.setItem('be_emoji',emojiApp);
+  saveOPFS();
+}
+
+// ── Applica dati da remoto ────────────────────────────────────────
+function applicaDati(d){
+  if(d.categorie)    categorie   =d.categorie;
+  if(d.eventi)       eventi      =d.eventi;
+  if(d.intestazione) intestazione=d.intestazione;
+  if(d.titoloApp)    titoloApp   =d.titoloApp;
+  if(d.emojiApp)     emojiApp    =d.emojiApp;
+  salvaLocale();
+  aggAppbar();
+  render();
+}
+// Esponi su window per il modulo Firebase
+window.applicaDati   = applicaDati;
+window.setSyncStatus = setSyncStatus;
+
+// ── Utils ─────────────────────────────────────────────────────────
+function nextId(arr){return arr.length ? Math.max(...arr.map(x=>x.id))+1 : 1;}
+function eur(n){return (n>=0?'':'−')+'€ '+Math.abs(n).toFixed(2);}
+function dataOggi(){return new Date().toISOString().slice(0,10);}
+function annoFromData(d){return d?d.slice(0,4):'';}
+function saldoEvento(ev){return (ev.voci||[]).reduce((a,v)=>a+v.importo,0);}
+function entrateEvento(ev){return (ev.voci||[]).filter(v=>v.importo>0).reduce((a,v)=>a+v.importo,0);}
+function usciteEvento(ev){return (ev.voci||[]).filter(v=>v.importo<0).reduce((a,v)=>a+v.importo,0);}
+
+// ── Routing ───────────────────────────────────────────────────────
+function go(t){
+  tab=t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t-'+t).classList.add('active');
+  render();
+}
+function render(){
+  const c=document.getElementById('ct');
+  if(tab==='eventi')   c.innerHTML=rEventi();
+  if(tab==='bilancio') c.innerHTML=rBilancio();
+  if(tab==='cat')      c.innerHTML=rCategorie();
+}
+
+// ── Tab EVENTI ────────────────────────────────────────────────────
+function rEventi(){
+  const enti=getEnti();
+  const ente=getEnteSel();
+  const enteSelezione=enti.length>1?`
+    <div class="anno-sel" style="margin-bottom:12px">
+      ${enti.map(e=>`<button class="anno-chip ${e===ente?'active':''}" onclick="selEnte('${esc(e)}')">${esc(e)}</button>`).join('')}
+    </div>`:'';
+
+  const eventiFiltrati=eventi.filter(ev=>!ente||!ev.ente||(ev.ente===ente)||(enti.length===1)).slice().sort((a,b)=>b.data.localeCompare(a.data));
+
+  if(!eventiFiltrati.length) return `
+    <div class="lbl">EVENTI${ente?' — '+esc(ente):''}</div>
+    ${enteSelezione}
+    <div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">Nessun evento per questo ente.<br>Aggiungine uno per iniziare.</div></div>
+    <button class="btn am" onclick="modalNuovoEvento()">＋ Nuovo evento</button>`;
+
+  const rows=eventiFiltrati.map(ev=>{
+    const saldo=saldoEvento(ev);
+    const nVoci=(ev.voci||[]).length;
+    const exp=expanded[ev.id];
+    const voceRows=exp?(ev.voci||[]).slice().sort((a,b)=>b.data.localeCompare(a.data)).map(v=>`
+      <div class="voce-row">
+        <div style="flex:1;min-width:0;margin-right:8px">
+          <div class="voce-nome">${esc(v.desc)||'—'}</div>
+          <div class="voce-cat">${esc(v.cat)} · ${v.data}${v.fonte==='scontrini-pwa'?' · 📥':''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span class="voce-imp ${v.importo>=0?'pos':'neg'}">${eur(v.importo)}</span>
+          <button onclick="modalModVoce(${ev.id},${v.id})" style="background:#2a2a3e;border:none;color:#aaa;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px">✏️</button>
+          <button onclick="modalEliminaVoce(${ev.id},${v.id})" style="background:#552222;border:none;color:#f99;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:13px">🗑️</button>
+        </div>
+      </div>`).join(''):'';
+
+    return `
+      <div class="card ${saldo>0?'green':saldo<0?'red':'amber'}">
+        <div class="card-row">
+          <div style="flex:1;min-width:0;margin-right:8px">
+            <div class="card-title">${esc(ev.nome)}</div>
+            <div class="card-sub">${ev.data} · ${nVoci} voce${nVoci!==1?'i':''}${ev.ente&&enti.length>1?' · '+esc(ev.ente):''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span class="voce-imp ${saldo>=0?'pos':'neg'}" style="font-size:16px">${eur(saldo)}</span>
+            <button class="expand-btn" onclick="toggleExp(${ev.id})">${exp?'▲':'▼'}</button>
+          </div>
+        </div>
+        ${exp?`
+        <div class="detail-section">
+          <div class="ev-summary">
+            <div class="ev-stat"><div class="ev-stat-val" style="color:#4caf50">${eur(entrateEvento(ev))}</div><div class="ev-stat-lbl">Entrate</div></div>
+            <div class="ev-stat"><div class="ev-stat-val" style="color:#f66">${eur(Math.abs(usciteEvento(ev)))}</div><div class="ev-stat-lbl">Uscite</div></div>
+            <div class="ev-stat"><div class="ev-stat-val" style="color:${saldo>=0?'#4caf50':'#f66'}">${eur(saldo)}</div><div class="ev-stat-lbl">Saldo</div></div>
+          </div>
+          <hr class="sep">
+          ${voceRows||'<div style="color:#555;font-size:13px;padding:8px 0;text-align:center">Nessuna voce. Aggiungine una.</div>'}
+          <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn am sm" style="flex:1;min-width:90px" onclick="modalNuovaVoce(${ev.id})">＋ Voce</button>
+            <button class="btn sm" style="flex:1;min-width:90px;background:#1a2e4a;color:#5b9bd5;border:2px solid #2a5080" onclick="modalImportaScontrini(${ev.id})">⬇ Importa JSON</button>
+            <button class="btn sm" style="background:#2a2a3e;color:#aaa;border:1px solid #3a3a50" onclick="modalModEvento(${ev.id})">✏️</button>
+            <button class="btn sm" style="background:#552222;color:#f99;border:none" onclick="eliminaEvento(${ev.id})">🗑️</button>
+          </div>
+        </div>`:''}
+      </div>`;
+  }).join('');
+
+  return `<div class="lbl">EVENTI${ente&&enti.length>1?' — '+esc(ente):''}</div>${enteSelezione}${rows}<button class="btn am" onclick="modalNuovoEvento()">＋ Nuovo evento</button>`;
+}
+
+// ── Tab BILANCIO ──────────────────────────────────────────────────
+function catPerEvento(ev){
+  const mappa={};
+  (ev.voci||[]).forEach(v=>{
+    if(!mappa[v.cat]) mappa[v.cat]={cat:v.cat,totale:0,voci:[]};
+    mappa[v.cat].totale+=v.importo;
+    mappa[v.cat].voci.push(v);
+  });
+  return Object.values(mappa).sort((a,b)=>b.totale-a.totale);
+}
+
+function rBilancio(){
+  const enti=getEnti();
+  const ente=getEnteSel();
+  const enteSelezione=enti.length>1?`
+    <div class="anno-sel" style="margin-bottom:12px">
+      ${enti.map(e=>`<button class="anno-chip ${e===ente?'active':''}" onclick="selEnteBilancio('${esc(e)}')">${esc(e)}</button>`).join('')}
+    </div>`:'';
+
+  const eventiEnte=eventi.filter(ev=>!ente||!ev.ente||(ev.ente===ente)||(enti.length===1));
+  const anni=[...new Set(eventiEnte.flatMap(ev=>(ev.voci||[]).map(v=>annoFromData(v.data))))].filter(Boolean).sort((a,b)=>b-a);
+
+  if(!anni.length) return `
+    <div class="lbl">BILANCIO${ente&&enti.length>1?' — '+esc(ente):''}</div>
+    ${enteSelezione}
+    <div class="empty"><div class="empty-icon">📊</div><div class="empty-txt">Nessun dato disponibile.<br>Aggiungi voci agli eventi.</div></div>`;
+
+  if(!annoSel||!anni.includes(annoSel)) annoSel=anni[0];
+
+  const eventiAnno=eventiEnte.map(ev=>({
+    ...ev,
+    voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===annoSel)
+  })).filter(ev=>ev.voci.length>0).sort((a,b)=>b.data.localeCompare(a.data));
+
+  const totEnt=eventiAnno.reduce((a,ev)=>a+entrateEvento(ev),0);
+  const totUsc=eventiAnno.reduce((a,ev)=>a+Math.abs(usciteEvento(ev)),0);
+  const totSaldo=totEnt-totUsc;
+
+  const annoChips=anni.map(a=>`<button class="anno-chip ${a===annoSel?'active':''}" onclick="selAnno('${a}')">${a}</button>`).join('');
+
+  const rows=eventiAnno.map(ev=>{
+    const saldo=saldoEvento(ev);
+    const expEv=expanded['b_'+ev.id];
+    const cats=catPerEvento(ev);
+
+    const catRows=expEv?cats.map(c=>{
+      const expCat=expanded['bc_'+ev.id+'_'+c.cat];
+      const voceRows=expCat?c.voci.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(v=>`
+        <div class="voce-row" style="padding-left:12px">
+          <div style="flex:1;min-width:0;margin-right:10px">
+            <div class="voce-nome" style="font-size:13px">${esc(v.desc)||'—'}</div>
+            <div class="voce-cat">${v.data}</div>
+          </div>
+          <span class="voce-imp ${v.importo>=0?'pos':'neg'}" style="font-size:13px;flex-shrink:0">${eur(v.importo)}</span>
+        </div>`).join(''):'';
+
+      return `
+        <div style="padding:8px 0;border-bottom:1px solid #1a1a28">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:600;color:#fff">${esc(c.cat)}</div>
+              <div style="font-size:11px;color:#888">${c.voci.length} voce${c.voci.length!==1?'i':''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span class="voce-imp ${c.totale>=0?'pos':'neg'}" style="font-size:14px">${eur(c.totale)}</span>
+              <button class="expand-btn" style="font-size:14px" onclick="toggleExpCat(${ev.id},'${esc(c.cat)}')">${expCat?'▲':'▼'}</button>
+            </div>
+          </div>
+          ${expCat?`<div style="margin-top:6px">${voceRows}</div>`:''}
+        </div>`;
+    }).join(''):'';
+
+    return `
+      <div class="card ${saldo>0?'green':saldo<0?'red':'amber'}">
+        <div class="card-row">
+          <div style="flex:1;min-width:0;margin-right:8px">
+            <div class="card-title">${esc(ev.nome)}</div>
+            <div class="card-sub">${cats.length} categor${cats.length!==1?'ie':'ia'} · ${ev.voci.length} voci</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span class="voce-imp ${saldo>=0?'pos':'neg'}" style="font-size:16px">${eur(saldo)}</span>
+            <button class="expand-btn" onclick="toggleExpB(${ev.id})">${expEv?'▲':'▼'}</button>
+          </div>
+        </div>
+        ${expEv?`
+        <div class="detail-section">
+          <div class="ev-summary">
+            <div class="ev-stat"><div class="ev-stat-val" style="color:#4caf50">${eur(entrateEvento(ev))}</div><div class="ev-stat-lbl">Entrate</div></div>
+            <div class="ev-stat"><div class="ev-stat-val" style="color:#f66">${eur(Math.abs(usciteEvento(ev)))}</div><div class="ev-stat-lbl">Uscite</div></div>
+            <div class="ev-stat"><div class="ev-stat-val" style="color:${saldo>=0?'#4caf50':'#f66'}">${eur(saldo)}</div><div class="ev-stat-lbl">Saldo</div></div>
+          </div>
+          <hr class="sep">
+          ${catRows}
+        </div>`:''}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="lbl">BILANCIO${ente&&enti.length>1?' — '+esc(ente):''}</div>
+    ${enteSelezione}
+    <div class="anno-sel">${annoChips}</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div class="tbox" style="flex:1;margin-bottom:0;padding:12px 14px">
+        <div><div class="tlbl" style="font-size:11px">Entrate</div><div class="tamt pos" style="font-size:18px">${eur(totEnt)}</div></div>
+      </div>
+      <div class="tbox" style="flex:1;margin-bottom:0;padding:12px 14px;background:#1a0000">
+        <div><div class="tlbl" style="font-size:11px;color:#f66">Uscite</div><div class="tamt neg" style="font-size:18px">${eur(totUsc)}</div></div>
+      </div>
+    </div>
+    <div class="tbox">
+      <span class="tlbl">SALDO ${annoSel}</span>
+      <span class="tamt ${totSaldo>=0?'pos':'neg'}">${eur(totSaldo)}</span>
+    </div>
+    ${rows||'<div class="note">Nessun evento con voci per questo anno.</div>'}
+    <button class="btn am" onclick="modalCondividi('${annoSel}',null)">📤 Condividi resoconto ${annoSel}</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn" style="flex:1;background:#1a2e3a;color:#5b9bd5;border:2px solid #2a5080;margin-bottom:0;font-size:13px" onclick="modalEsportaFile('${annoSel}',null)">📄 PDF / Excel</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <button class="btn" style="flex:1;background:#1a3d1a;color:#4caf50;border:2px solid #2d7a45;margin-bottom:0" onclick="esportaDati()">💾 Esporta dati</button>
+      <label style="flex:1;display:flex">
+        <input type="file" accept=".json" style="display:none" onchange="importaDati(event)">
+        <span class="btn" style="flex:1;background:#1a2040;color:#5b9bd5;border:2px solid #2a5080;text-align:center;cursor:pointer;margin-bottom:0;display:flex;align-items:center;justify-content:center" onclick="this.previousElementSibling.click()">📥 Importa dati</span>
+      </label>
+    </div>`;
+}
+
+// ── Condividi con scelta evento ───────────────────────────────────
+function modalCondividi(anno, evId){
+  const ente=getEnteSel();
+  const enti=getEnti();
+  const eventiAnno=eventi
+    .filter(ev=>!ente||!ev.ente||(ev.ente===ente)||(enti.length===1))
+    .map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)}))
+    .filter(ev=>ev.voci.length>0);
+  const opzioniEventi=eventiAnno.map(ev=>`<button class="btn" style="background:#2a2a3e;color:#fff;border:1px solid #3a3a50;text-align:left;padding:10px 14px;margin-bottom:6px;font-size:13px" onclick="modalSceltaDettaglio('${anno}',${ev.id})">${esc(ev.nome)}</button>`).join('');
+  showModal(`
+    <div class="modal-title">📤 CONDIVIDI${ente&&enti.length>1?' — '+esc(ente):''}</div>
+    <div style="color:#888;font-size:12px;margin-bottom:10px">Cosa vuoi condividere?</div>
+    <button class="btn am" style="margin-bottom:8px" onclick="modalSceltaDettaglio('${anno}',null)">📊 Tutto il ${anno}</button>
+    ${opzioniEventi}
+    <button class="btn gray" onclick="closeModal()">Annulla</button>`);
+}
+function modalSceltaDettaglio(anno, evId){
+  const titolo = evId ? esc(eventi.find(e=>e.id===evId)?.nome||'') : `Anno ${anno}`;
+  showModal(`
+    <div class="modal-title">📤 ${titolo}</div>
+    <div style="color:#888;font-size:12px;margin-bottom:12px">Livello di dettaglio:</div>
+    <button class="btn am" style="margin-bottom:8px" onclick="inviaResoconto('${anno}',${evId},false)">📊 Per categorie (riepilogo)</button>
+    <button class="btn out" style="margin-bottom:8px" onclick="inviaResoconto('${anno}',${evId},true)">📋 Dettaglio completo</button>
+    <button class="btn gray" onclick="closeModal()">Annulla</button>`);
+}
+function inviaResoconto(anno, evId, dettaglio){
+  const ente=getEnteSel();
+  const enti=getEnti();
+  let txt;
+  if(evId){
+    const ev=eventi.find(e=>e.id===evId);
+    const evFiltrato={...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)};
+    txt = dettaglio ? buildTestoEventoDettaglio(evFiltrato) : buildTestoEventoCategorie(evFiltrato);
+  } else {
+    txt = dettaglio ? buildTesto(anno,ente,enti) : buildTestoCategorie(anno,ente,enti);
+  }
+  closeModal();
+  if(navigator.share){
+    navigator.share({title:`Bilancio ${ente?ente+' ':''}${anno}`,text:txt}).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(txt)
+      .then(()=>showModal(`<div class="modal-title">✅ COPIATO</div><div class="note" style="text-align:center">Resoconto copiato negli appunti.</div><button class="btn am" onclick="closeModal()">OK</button>`))
+      .catch(()=>{});
+  }
+}
+function buildTestoEventoCategorie(ev){
+  const SEP='════════════════════════════════';
+  const sep='────────────────────────────────';
+  let txt=`📒 ${ev.nome}\n${SEP}\n`;
+  catPerEvento(ev).forEach(c=>{
+    txt+=`${c.totale>=0?'↑':'↓'} ${(c.totale>=0?'+':'-')+'€'+Math.abs(c.totale).toFixed(2)} ${c.cat}\n`;
+  });
+  txt+=`${sep}\n💰 Saldo: ${saldoEvento(ev)>=0?'+':''}€${saldoEvento(ev).toFixed(2)}\n${SEP}`;
+  return txt;
+}
+function buildTestoEventoDettaglio(ev){
+  const SEP='════════════════════════════════';
+  const sep='────────────────────────────────';
+  const sal=saldoEvento(ev);
+  let txt=`📒 ${ev.nome}\n${SEP}\n`;
+  const entrate=(ev.voci||[]).filter(v=>v.importo>=0).sort((a,b)=>a.data.localeCompare(b.data));
+  const uscite=(ev.voci||[]).filter(v=>v.importo<0).sort((a,b)=>a.data.localeCompare(b.data));
+  if(entrate.length){txt+=`↑ ENTRATE\n`;entrate.forEach(v=>{txt+=`  +€${v.importo.toFixed(2).padEnd(8)} ${v.cat}\n   ${v.desc} (${v.data})\n`;});}
+  if(uscite.length){txt+=`↓ USCITE\n`;uscite.forEach(v=>{txt+=`  -€${Math.abs(v.importo).toFixed(2).padEnd(8)} ${v.cat}\n   ${v.desc} (${v.data})\n`;});}
+  txt+=`${sep}\n💰 Saldo: ${sal>=0?'+':''}€${sal.toFixed(2)}\n${SEP}`;
+  return txt;
+}
+
+// ── Esporta PDF / Excel ───────────────────────────────────────────
+function modalEsportaFile(anno, evId){
+  const ente=getEnteSel();
+  const enti=getEnti();
+  const eventiAnno=eventi
+    .filter(ev=>!ente||!ev.ente||(ev.ente===ente)||(enti.length===1))
+    .map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)}))
+    .filter(ev=>ev.voci.length>0);
+  const opzioniEventi=eventiAnno.map(ev=>`
+    <div style="background:#1e1e30;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+      <div style="color:#fff;font-size:13px;font-weight:600;margin-bottom:8px">${esc(ev.nome)}</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm" style="flex:1;background:#7b1a1a;color:#fff;border:none;font-size:11px" onclick="generaPDF('${anno}',${ev.id},false)">📄 PDF riepilogo</button>
+        <button class="btn sm" style="flex:1;background:#c0392b;color:#fff;border:none;font-size:11px" onclick="generaPDF('${anno}',${ev.id},true)">📄 PDF dettaglio</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="btn sm" style="flex:1;background:#1a4a2a;color:#fff;border:none;font-size:11px" onclick="generaExcel('${anno}',${ev.id},false)">📊 Excel riepilogo</button>
+        <button class="btn sm" style="flex:1;background:#1a6b2a;color:#fff;border:none;font-size:11px" onclick="generaExcel('${anno}',${ev.id},true)">📊 Excel dettaglio</button>
+      </div>
+    </div>`).join('');
+  showModal(`
+    <div class="modal-title">📄 ESPORTA FILE</div>
+    <div style="color:#888;font-size:12px;margin-bottom:8px">Tutto l'anno ${anno}:</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <button class="btn sm" style="flex:1;background:#7b1a1a;color:#fff;border:none;font-size:11px" onclick="generaPDF('${anno}',null,false)">📄 PDF riepilogo</button>
+      <button class="btn sm" style="flex:1;background:#c0392b;color:#fff;border:none;font-size:11px" onclick="generaPDF('${anno}',null,true)">📄 PDF dettaglio</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="btn sm" style="flex:1;background:#1a4a2a;color:#fff;border:none;font-size:11px" onclick="generaExcel('${anno}',null,false)">📊 Excel riepilogo</button>
+      <button class="btn sm" style="flex:1;background:#1a6b2a;color:#fff;border:none;font-size:11px" onclick="generaExcel('${anno}',null,true)">📊 Excel dettaglio</button>
+    </div>
+    <div style="color:#888;font-size:12px;margin-bottom:8px">Singolo evento:</div>
+    ${opzioniEventi}
+    <button class="btn gray" style="margin-top:4px" onclick="closeModal()">Annulla</button>`);
+}
+
+function generaPDF(anno, evId, dettaglio){
+  closeModal();
+  if(!window.jspdf){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=()=>_generaPDF(anno,evId,dettaglio);
+    document.head.appendChild(s);
+  } else { _generaPDF(anno,evId,dettaglio); }
+}
+function _generaPDF(anno, evId, dettaglio){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, mg=15;
+  let y=20;
+  const nl=(h=6)=>{y+=h; if(y>270){doc.addPage();y=20;}};
+  const line=(x1,x2)=>{doc.setDrawColor(200);doc.line(x1,y,x2,y);nl(2);};
+
+  // Intestazione
+  doc.setFillColor(196,124,0);
+  doc.rect(0,0,W,18,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14);doc.setFont('helvetica','bold');
+  doc.text(getEnteSel()||intestazione[0]||'Bilancio Eventi', mg, 12);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text(`Generato il ${new Date().toLocaleDateString('it-IT')}`, W-mg, 12, {align:'right'});
+  y=28;
+
+  const ente=getEnteSel();
+  const enti=getEnti();
+  const eventiDaStampare = evId
+    ? [eventi.find(e=>e.id===evId)].filter(Boolean).map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)}))
+    : eventi.filter(ev=>!ente||!ev.ente||(ev.ente===ente)||(enti.length===1)).map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)})).filter(ev=>ev.voci.length>0);
+
+  // Titolo
+  doc.setTextColor(196,124,0);doc.setFontSize(16);doc.setFont('helvetica','bold');
+  doc.text(evId?(eventiDaStampare[0]?.nome||''):`Bilancio ${ente?ente+' ':''}${anno} — ${dettaglio?'Dettaglio':'Riepilogo'}`, mg, y);nl(10);
+
+  // Totali anno
+  if(!evId){
+    const totE=eventiDaStampare.reduce((a,ev)=>a+entrateEvento(ev),0);
+    const totU=eventiDaStampare.reduce((a,ev)=>a+Math.abs(usciteEvento(ev)),0);
+    const totS=totE-totU;
+    doc.setFillColor(42,26,0);doc.rect(mg,y-4,W-mg*2,14,'F');
+    doc.setTextColor(255,232,160);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text(`Entrate: +€${totE.toFixed(2)}   Uscite: -€${totU.toFixed(2)}   Saldo: ${totS>=0?'+':''}€${totS.toFixed(2)}`,mg+4,y+5);
+    nl(16);
+  }
+
+  eventiDaStampare.forEach(ev=>{
+    const sal=saldoEvento(ev);
+    doc.setFillColor(30,30,48);doc.rect(mg,y-4,W-mg*2,10,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(12);doc.setFont('helvetica','bold');
+    doc.text(ev.nome, mg+3, y+2);
+    doc.setTextColor(sal>=0?39:220, sal>=0?174:53, sal>=0?96:69);
+    doc.text(`${sal>=0?'+':''}€${sal.toFixed(2)}`, W-mg-3, y+2, {align:'right'});
+    nl(12);
+
+    catPerEvento(ev).forEach(c=>{
+      doc.setTextColor(60,60,60);doc.setFontSize(9);doc.setFont('helvetica','bold');
+      doc.text(c.cat, mg+4, y);
+      doc.setTextColor(c.totale>=0?39:180, c.totale>=0?139:0, c.totale>=0?96:0);
+      doc.text(`${c.totale>=0?'+':''}€${c.totale.toFixed(2)}`, W-mg-4, y, {align:'right'});
+      nl(5);
+      if(dettaglio){
+        c.voci.forEach(v=>{
+          doc.setTextColor(120,120,120);doc.setFontSize(8);doc.setFont('helvetica','normal');
+          doc.text(`   ${v.desc} (${v.data})`, mg+8, y);
+          doc.text(`${v.importo>=0?'+':''}€${v.importo.toFixed(2)}`, W-mg-4, y, {align:'right'});
+          nl(4);
+        });
+      }
+    });
+    line(mg, W-mg);
+    doc.setTextColor(50,50,50);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(`Entrate: +€${entrateEvento(ev).toFixed(2)}   Uscite: -€${Math.abs(usciteEvento(ev)).toFixed(2)}`, mg+4, y);
+    doc.setTextColor(sal>=0?39:180, sal>=0?139:0, sal>=0?96:0);
+    doc.text(`Saldo: ${sal>=0?'+':''}€${sal.toFixed(2)}`, W-mg-4, y, {align:'right'});
+    nl(10);
+  });
+
+  const tipo=dettaglio?'dettaglio':'riepilogo';
+  const nome=evId?`bilancio_${(eventiDaStampare[0]?.nome||'evento').replace(/\s+/g,'_')}_${anno}_${tipo}`:`bilancio_${anno}_${tipo}`;
+  doc.save(`${nome}.pdf`);
+}
+
+function generaExcel(anno, evId, dettaglio){
+  closeModal();
+  if(!window.XLSX){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=()=>_generaExcel(anno,evId,dettaglio);
+    document.head.appendChild(s);
+  } else { _generaExcel(anno,evId,dettaglio); }
+}
+function _generaExcel(anno, evId, dettaglio){
+  const wb=XLSX.utils.book_new();
+  const ente=getEnteSel();
+  const enti=getEnti();
+  const eventiDaEsportare = evId
+    ? [eventi.find(e=>e.id===evId)].filter(Boolean).map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)}))
+    : eventi.filter(ev=>!ente||!ev.ente||(ev.ente===ente)||(enti.length===1)).map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)})).filter(ev=>ev.voci.length>0);
+
+  // Foglio RIEPILOGO
+  const righeRiepilogo=[
+    ['Evento','Entrate (€)','Uscite (€)','Saldo (€)']
+  ];
+  eventiDaEsportare.forEach(ev=>{
+    righeRiepilogo.push([
+      ev.nome,
+      entrateEvento(ev).toFixed(2),
+      Math.abs(usciteEvento(ev)).toFixed(2),
+      saldoEvento(ev).toFixed(2)
+    ]);
+  });
+  if(!evId){
+    const totE=eventiDaEsportare.reduce((a,ev)=>a+entrateEvento(ev),0);
+    const totU=eventiDaEsportare.reduce((a,ev)=>a+Math.abs(usciteEvento(ev)),0);
+    righeRiepilogo.push(['TOTALE',totE.toFixed(2),totU.toFixed(2),(totE-totU).toFixed(2)]);
+  }
+  const wsRiepilogo=XLSX.utils.aoa_to_sheet(righeRiepilogo);
+  wsRiepilogo['!cols']=[{wch:30},{wch:14},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,wsRiepilogo,'Riepilogo');
+
+  // Foglio per ogni evento
+  eventiDaEsportare.forEach(ev=>{
+    let righe;
+    if(dettaglio){
+      righe=[['Data','Categoria','Descrizione','Importo (€)']];
+      (ev.voci||[]).slice().sort((a,b)=>a.data.localeCompare(b.data)).forEach(v=>{
+        righe.push([v.data, v.cat, v.desc, parseFloat(v.importo.toFixed(2))]);
+      });
+    } else {
+      righe=[['Categoria','Entrate (€)','Uscite (€)','Saldo (€)']];
+      catPerEvento(ev).forEach(c=>{
+        const ent=c.voci.filter(v=>v.importo>=0).reduce((a,v)=>a+v.importo,0);
+        const usc=c.voci.filter(v=>v.importo<0).reduce((a,v)=>a+v.importo,0);
+        righe.push([c.cat, ent.toFixed(2), Math.abs(usc).toFixed(2), c.totale.toFixed(2)]);
+      });
+    }
+    righe.push([]);
+    righe.push(['','Entrate',entrateEvento(ev).toFixed(2),'']);
+    righe.push(['','Uscite',(-Math.abs(usciteEvento(ev))).toFixed(2),'']);
+    righe.push(['','Saldo',saldoEvento(ev).toFixed(2),'']);
+    const ws=XLSX.utils.aoa_to_sheet(righe);
+    ws['!cols']=dettaglio?[{wch:12},{wch:22},{wch:35},{wch:14}]:[{wch:28},{wch:14},{wch:14},{wch:14}];
+    const nFoglio=ev.nome.replace(/[:\\/?*\[\]]/g,'').substring(0,31);
+    XLSX.utils.book_append_sheet(wb,ws,nFoglio);
+  });
+
+  const tipo=dettaglio?'dettaglio':'riepilogo';
+  const nome=evId?`bilancio_${(eventiDaEsportare[0]?.nome||'evento').replace(/\s+/g,'_')}_${anno}_${tipo}`:`bilancio_${anno}_${tipo}`;
+  XLSX.writeFile(wb,`${nome}.xlsx`);
+}
+
+// ── Tab CATEGORIE ─────────────────────────────────────────────────
+function rCategorie(){
+  const rows=categorie.map((c,i)=>`
+    <div class="card amber" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px">
+      <span style="font-size:15px;font-weight:600;flex:1">${esc(c)}</span>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="modalModCat(${i})" style="background:#2a2a3e;border:none;color:#aaa;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px">&#9999;&#65039;</button>
+        <button onclick="modalEliminaCat(${i})" style="background:#552222;border:none;color:#f99;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px">&#128465;&#65039;</button>
+      </div>
+    </div>`).join('');
+  return `
+    <div class="lbl">CATEGORIE</div>
+    <div class="note">Usate per classificare le voci di ogni evento.</div>
+    ${rows}
+    <button class="btn am" onclick="modalNuovaCat()">＋ Nuova categoria</button>`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toggleExp(id){expanded[id]=!expanded[id];render();}
+function toggleExpB(id){expanded['b_'+id]=!expanded['b_'+id];render();}
+function toggleExpCat(evId,cat){expanded['bc_'+evId+'_'+cat]=!expanded['bc_'+evId+'_'+cat];render();}
+function selAnno(a){annoSel=a;render();}
+function selEnte(e){enteSel=e;aggAppbar();render();}
+function selEnteBilancio(e){enteSel=e;annoSel=null;aggAppbar();render();}
+
+// ── Modal ─────────────────────────────────────────────────────────
+function showModal(html){
+  document.getElementById('modalBox').innerHTML=html;
+  document.getElementById('overlay').style.display='flex';
+}
+function closeModal(){document.getElementById('overlay').style.display='none';}
+function closeBg(e){if(e.target===document.getElementById('overlay'))closeModal();}
+
+// ── Modali EVENTI ─────────────────────────────────────────────────
+function modalNuovoEvento(){
+  const enti=getEnti();
+  const ente=getEnteSel();
+  const enteOpts=enti.map(e=>`<option value="${esc(e)}" ${e===ente?'selected':''}>${esc(e)}</option>`).join('');
+  const enteField=enti.length>1?`
+    <div style="color:#aaa;font-size:11px;margin-bottom:4px">Ente</div>
+    <select class="inp" id="mEnte">${enteOpts}</select>`:'';
+  showModal(`
+    <div class="modal-title">NUOVO EVENTO</div>
+    <input class="inp" id="mNome" placeholder="Nome evento" type="text" maxlength="60">
+    <input class="inp" id="mData" type="date" value="${dataOggi()}">
+    ${enteField}
+    <input class="inp" id="mNote" placeholder="Note (opzionale)" type="text" maxlength="120">
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="salvaEvento()">Salva</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('mNome')?.focus(),100);
+}
+function salvaEvento(){
+  const nome=(document.getElementById('mNome')?.value||'').trim();
+  const data=document.getElementById('mData')?.value||dataOggi();
+  if(!nome)return;
+  const ente=document.getElementById('mEnte')?.value||getEnteSel()||'';
+  eventi.push({id:nextId(eventi),nome,data,ente,note:document.getElementById('mNote')?.value||'',voci:[]});
+  salva();closeModal();render();
+}
+
+function modalModEvento(id){
+  const ev=eventi.find(e=>e.id===id);if(!ev)return;
+  const enti=getEnti();
+  const enteOpts=enti.map(e=>`<option value="${esc(e)}" ${e===(ev.ente||'')?'selected':''}>${esc(e)}</option>`).join('');
+  const enteField=enti.length>1?`
+    <div style="color:#aaa;font-size:11px;margin-bottom:4px">Ente</div>
+    <select class="inp" id="mEnte">${enteOpts}</select>`:'';
+  showModal(`
+    <div class="modal-title">MODIFICA EVENTO</div>
+    <input class="inp" id="mNome" type="text" value="${esc(ev.nome)}" maxlength="60">
+    <input class="inp" id="mData" type="date" value="${ev.data}">
+    ${enteField}
+    <input class="inp" id="mNote" type="text" placeholder="Note" value="${esc(ev.note||'')}" maxlength="120">
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="aggEvento(${id})">Salva</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('mNome')?.focus(),100);
+}
+function aggEvento(id){
+  const ev=eventi.find(e=>e.id===id);if(!ev)return;
+  const nome=(document.getElementById('mNome')?.value||'').trim();
+  if(!nome)return;
+  ev.nome=nome;
+  ev.data=document.getElementById('mData')?.value||ev.data;
+  ev.note=document.getElementById('mNote')?.value||'';
+  const enteEl=document.getElementById('mEnte');
+  if(enteEl) ev.ente=enteEl.value;
+  salva();closeModal();render();
+}
+function eliminaEvento(id){
+  const ev=eventi.find(e=>e.id===id);if(!ev)return;
+  showModal(`
+    <div class="modal-title">ELIMINA EVENTO</div>
+    <div style="color:#fff;font-size:15px;text-align:center;margin-bottom:6px">${esc(ev.nome)}</div>
+    <div style="color:#888;font-size:13px;text-align:center;margin-bottom:20px">Verranno eliminate anche le ${(ev.voci||[]).length} voci associate.</div>
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn red sm" style="flex:1" onclick="_confEliminaEvento(${id})">Elimina</button>
+    </div>`);
+}
+function _confEliminaEvento(id){
+  eventi=eventi.filter(e=>e.id!==id);
+  delete expanded[id];
+  salva();closeModal();render();
+}
+
+// ── Modali VOCI ───────────────────────────────────────────────────
+function modalNuovaVoce(evId){
+  const catOpts=categorie.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  showModal(`
+    <div class="modal-title">NUOVA VOCE</div>
+    <select class="inp" id="mCat">${catOpts}</select>
+    <input class="inp" id="mDesc" placeholder="Descrizione" type="text" maxlength="80">
+    <div class="row2">
+      <input class="inp" id="mImp" placeholder="Importo" type="number" step="0.01">
+      <input class="inp" id="mDataV" type="date" value="${dataOggi()}">
+    </div>
+    <div style="color:#888;font-size:11px;margin-bottom:12px">Importo negativo = uscita (es. -50.00)</div>
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="salvaVoce(${evId})">Salva</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('mDesc')?.focus(),100);
+}
+function salvaVoce(evId){
+  const ev=eventi.find(e=>e.id===evId);if(!ev)return;
+  const imp=parseFloat(document.getElementById('mImp')?.value||'');
+  const desc=(document.getElementById('mDesc')?.value||'').trim();
+  const cat=document.getElementById('mCat')?.value||categorie[0];
+  const data=document.getElementById('mDataV')?.value||dataOggi();
+  if(!desc||isNaN(imp))return;
+  if(!ev.voci)ev.voci=[];
+  ev.voci.push({id:nextId(ev.voci),cat,desc,importo:imp,data,fonte:'manuale'});
+  salva();closeModal();expanded[evId]=true;render();
+}
+function modalModVoce(evId,vId){
+  const ev=eventi.find(e=>e.id===evId);if(!ev)return;
+  const v=ev.voci.find(x=>x.id===vId);if(!v)return;
+  const catOpts=categorie.map(c=>`<option value="${esc(c)}" ${c===v.cat?'selected':''}>${esc(c)}</option>`).join('');
+  showModal(`
+    <div class="modal-title">MODIFICA VOCE</div>
+    <select class="inp" id="mCat">${catOpts}</select>
+    <input class="inp" id="mDesc" type="text" maxlength="80" value="${esc(v.desc)}">
+    <div class="row2">
+      <input class="inp" id="mImp" type="number" step="0.01" value="${v.importo}">
+      <input class="inp" id="mDataV" type="date" value="${v.data}">
+    </div>
+    <div style="color:#888;font-size:11px;margin-bottom:12px">Importo negativo = uscita (es. -50.00)</div>
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="aggVoce(${evId},${vId})">Salva</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('mDesc')?.focus(),100);
+}
+function aggVoce(evId,vId){
+  const ev=eventi.find(e=>e.id===evId);if(!ev)return;
+  const v=ev.voci.find(x=>x.id===vId);if(!v)return;
+  const imp=parseFloat(document.getElementById('mImp')?.value||'');
+  const desc=(document.getElementById('mDesc')?.value||'').trim();
+  const cat=document.getElementById('mCat')?.value||v.cat;
+  const data=document.getElementById('mDataV')?.value||v.data;
+  if(!desc||isNaN(imp))return;
+  v.cat=cat;v.desc=desc;v.importo=imp;v.data=data;
+  salva();closeModal();expanded[evId]=true;render();
+}
+function modalEliminaVoce(evId,vId){
+  const ev=eventi.find(e=>e.id===evId);if(!ev)return;
+  const v=ev.voci.find(x=>x.id===vId);if(!v)return;
+  showModal(`
+    <div class="modal-title">ELIMINA VOCE</div>
+    <div style="color:#fff;font-size:15px;text-align:center;margin-bottom:6px">${esc(v.desc)}</div>
+    <div style="color:#888;font-size:13px;text-align:center;margin-bottom:20px">${eur(v.importo)} · ${v.data}</div>
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn red sm" style="flex:1" onclick="eliminaVoce(${evId},${vId})">Elimina</button>
+    </div>`);
+}
+function eliminaVoce(evId,vId){
+  const ev=eventi.find(e=>e.id===evId);if(!ev)return;
+  ev.voci=ev.voci.filter(v=>v.id!==vId);
+  salva();closeModal();expanded[evId]=true;render();
+}
+
+// ── Importa da ScontriniPWA ───────────────────────────────────────
+function modalImportaScontrini(evId){
+  showModal(`
+    <div class="modal-title">IMPORTA DA SCONTRINI PWA</div>
+    <div class="note" style="margin-bottom:14px">
+      Seleziona il file <strong style="color:#ffe8a0">vendite_*.json</strong> esportato da ScontriniPWA.<br><br>
+      Il totale verrà aggiunto come voce entrata nell'evento.
+    </div>
+    <input type="file" accept=".json" id="fileInput" style="display:none" onchange="leggiScontrini(event,${evId})">
+    <button class="btn am" onclick="document.getElementById('fileInput').click()">📂 Scegli file JSON</button>
+    <button class="btn gray" onclick="closeModal()">Annulla</button>`);
+}
+function leggiScontrini(ev,evId){
+  const file=ev.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      const evento=eventi.find(x=>x.id===evId);if(!evento)return;
+      if(!evento.voci)evento.voci=[];
+      const dataFile=d.savedAt?d.savedAt.slice(0,10):dataOggi();
+
+      if(d.totale && !isNaN(d.totale)){
+        // File con totale già calcolato
+        evento.voci.push({id:nextId(evento.voci),cat:'Incasso bar',desc:'Importato da ScontriniPWA',importo:parseFloat(d.totale),data:dataFile,fonte:'scontrini-pwa'});
+        salva();
+        showModal(`
+          <div class="modal-title">✅ IMPORTATO</div>
+          <div class="note" style="text-align:center;margin-bottom:16px">Voce aggiunta:<br><strong style="color:#4caf50;font-size:20px">${eur(d.totale)}</strong></div>
+          <button class="btn am" onclick="closeModal();expanded[${evId}]=true;render()">OK</button>`);
+      } else if(d.venduti){
+        // File solo con quantità — chiedi importo manuale
+        const qtyTot=Object.values(d.venduti).reduce((a,v)=>a+(parseInt(v)||0),0);
+        showModal(`
+          <div class="modal-title">IMPORTA SCONTRINI</div>
+          <div class="note" style="margin-bottom:12px">
+            File rilevato: <strong style="color:#ffe8a0">${qtyTot} pezzi venduti</strong>.<br>
+            Il file non contiene i prezzi. Inserisci l'importo totale dell'incasso:
+          </div>
+          <input class="inp" id="mTotImp" type="number" step="0.01" placeholder="Es. 1250.00">
+          <input class="inp" id="mTotData" type="date" value="${dataFile}">
+          <select class="inp" id="mTotCat">${categorie.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
+          <div class="modal-btn-row">
+            <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+            <button class="btn am sm" style="flex:1" onclick="confermaTotImport(${evId})">Importa</button>
+          </div>`);
+      } else {
+        showModal(`
+          <div class="modal-title">FILE NON RICONOSCIUTO</div>
+          <div class="note">Il file non sembra un export di ScontriniPWA valido.</div>
+          <button class="btn am" onclick="closeModal()">OK</button>`);
+      }
+    }catch(err){
+      showModal(`
+        <div class="modal-title">ERRORE LETTURA</div>
+        <div class="note">${err.message}</div>
+        <button class="btn am" onclick="closeModal()">OK</button>`);
+    }
+  };
+  r.readAsText(file);
+}
+function confermaTotImport(evId){
+  const imp=parseFloat(document.getElementById('mTotImp')?.value||'');
+  const data=document.getElementById('mTotData')?.value||dataOggi();
+  const cat=document.getElementById('mTotCat')?.value||categorie[0];
+  if(!imp||isNaN(imp))return;
+  const evento=eventi.find(x=>x.id===evId);if(!evento)return;
+  if(!evento.voci)evento.voci=[];
+  evento.voci.push({id:nextId(evento.voci),cat,desc:'Importato da ScontriniPWA',importo:imp,data,fonte:'scontrini-pwa'});
+  salva();closeModal();expanded[evId]=true;render();
+}
+
+// ── Categorie ─────────────────────────────────────────────────────
+function modalNuovaCat(){
+  showModal(`
+    <div class="modal-title">NUOVA CATEGORIA</div>
+    <input class="inp" id="mCatNome" placeholder="Nome categoria" type="text" maxlength="40">
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="salvaCat()">Salva</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('mCatNome')?.focus(),100);
+}
+function salvaCat(){
+  const n=(document.getElementById('mCatNome')?.value||'').trim();
+  if(!n||categorie.includes(n))return;
+  categorie.push(n);salva();closeModal();render();
+}
+function modalModCat(i){
+  showModal(`
+    <div class="modal-title">MODIFICA CATEGORIA</div>
+    <input class="inp" id="mCatNome" type="text" maxlength="40" value="${esc(categorie[i])}">
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="aggCat(${i})">Salva</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('mCatNome')?.focus(),100);
+}
+function aggCat(i){
+  const n=(document.getElementById('mCatNome')?.value||'').trim();
+  if(!n)return;
+  const vecchio=categorie[i];
+  categorie[i]=n;
+  // aggiorna anche le voci degli eventi che usavano il vecchio nome
+  eventi.forEach(ev=>(ev.voci||[]).forEach(v=>{if(v.cat===vecchio)v.cat=n;}));
+  salva();closeModal();render();
+}
+function modalEliminaCat(i){
+  showModal(`
+    <div class="modal-title">ELIMINA CATEGORIA</div>
+    <div style="color:#fff;font-size:15px;text-align:center;margin-bottom:6px">${esc(categorie[i])}</div>
+    <div style="color:#888;font-size:13px;text-align:center;margin-bottom:20px">Le voci che la usano non verranno eliminate, ma rimarranno senza categoria.</div>
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn red sm" style="flex:1" onclick="eliminaCat(${i})">Elimina</button>
+    </div>`);
+}
+function eliminaCat(i){
+  categorie.splice(i,1);salva();closeModal();render();
+}
+
+// ── Condividi resoconto ───────────────────────────────────────────
+function toggleExpCat(evId,cat){expanded['bc_'+evId+'_'+cat]=!expanded['bc_'+evId+'_'+cat];render();}
+
+function buildTestoCategorie(anno, ente, enti){
+  const eventiAnno=eventi
+    .filter(ev=>!ente||!ev.ente||(ev.ente===ente)||((enti||[]).length===1))
+    .map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)}))
+    .filter(ev=>ev.voci.length>0).sort((a,b)=>b.data.localeCompare(a.data));
+  const totEnt=eventiAnno.reduce((a,ev)=>a+entrateEvento(ev),0);
+  const totUsc=eventiAnno.reduce((a,ev)=>a+Math.abs(usciteEvento(ev)),0);
+  const totSaldo=totEnt-totUsc;
+  const SEP='════════════════════════════════';
+  const sep='────────────────────────────────';
+  let txt=`📒 BILANCIO ${ente?ente+' ':''}- ${anno}\n${SEP}\n`;
+  eventiAnno.forEach(ev=>{
+    const sal=saldoEvento(ev);
+    txt+=`\n📅 ${ev.nome}\n${sep}\n`;
+    catPerEvento(ev).forEach(c=>{
+      const segno=c.totale>=0?'↑':'↓';
+      txt+=`${segno} ${(c.totale>=0?'+':'-')+'€'+Math.abs(c.totale).toFixed(2)} ${c.cat}\n`;
+    });
+    txt+=`${sep}\n   Saldo: ${sal>=0?'+':''}€${sal.toFixed(2)}\n`;
+  });
+  txt+=`\n${SEP}\n📈 Entrate: +€${totEnt.toFixed(2)}\n📉 Uscite:  -€${totUsc.toFixed(2)}\n${SEP}\n💰 SALDO ${anno}: ${totSaldo>=0?'+':''}€${totSaldo.toFixed(2)}\n${SEP}`;
+  return txt;
+}
+
+function buildTesto(anno, ente, enti){
+  const eventiAnno=eventi
+    .filter(ev=>!ente||!ev.ente||(ev.ente===ente)||((enti||[]).length===1))
+    .map(ev=>({...ev,voci:(ev.voci||[]).filter(v=>annoFromData(v.data)===anno)}))
+    .filter(ev=>ev.voci.length>0).sort((a,b)=>b.data.localeCompare(a.data));
+
+  const totEnt=eventiAnno.reduce((a,ev)=>a+entrateEvento(ev),0);
+  const totUsc=eventiAnno.reduce((a,ev)=>a+Math.abs(usciteEvento(ev)),0);
+  const totSaldo=totEnt-totUsc;
+  const SEP='════════════════════════════════';
+  const sep ='────────────────────────────────';
+
+  let txt=`📒 BILANCIO EVENTI ${ente?ente+' ':''}${anno}\n${SEP}\n`;
+  eventiAnno.forEach(ev=>{
+    const ent=entrateEvento(ev);
+    const usc=usciteEvento(ev);
+    const sal=saldoEvento(ev);
+    txt+=`\n📅 ${ev.nome}\n${sep}\n`;
+    const entrate=(ev.voci||[]).filter(v=>v.importo>=0).sort((a,b)=>a.data.localeCompare(b.data));
+    const uscite=(ev.voci||[]).filter(v=>v.importo<0).sort((a,b)=>a.data.localeCompare(b.data));
+    if(entrate.length){
+      txt+=`↑ ENTRATE\n`;
+      entrate.forEach(v=>{
+        const imp='+€'+v.importo.toFixed(2);
+        txt+=`  ${imp.padEnd(11)} ${v.cat}\n   ${v.desc} (${v.data})\n`;
+      });
+    }
+    if(uscite.length){
+      txt+=`↓ USCITE\n`;
+      uscite.forEach(v=>{
+        const imp='-€'+Math.abs(v.importo).toFixed(2);
+        txt+=`  ${imp.padEnd(11)} ${v.cat}\n   ${v.desc} (${v.data})\n`;
+      });
+    }
+    txt+=`${sep}\n`;
+    txt+=`   Entrate : +€${ent.toFixed(2)}\n`;
+    txt+=`   Uscite  : -€${Math.abs(usc).toFixed(2)}\n`;
+    txt+=`   Saldo   : ${sal>=0?'+':''}€${sal.toFixed(2)}\n`;
+  });
+  txt+=`\n${SEP}\n`;
+  txt+=`📈 Totale entrate : +€${totEnt.toFixed(2)}\n`;
+  txt+=`📉 Totale uscite  : -€${totUsc.toFixed(2)}\n`;
+  txt+=`${SEP}\n`;
+  txt+=`💰 SALDO ${anno}       : ${totSaldo>=0?'+':''}€${totSaldo.toFixed(2)}\n`;
+  txt+=`${SEP}`;
+  return txt;
+}
+
+function inviaCondivisione(anno){condividi(anno);}
+function inviaEmail(anno){
+  const txt=buildTesto(anno);
+  const sogg=encodeURIComponent(`Bilancio Eventi ${anno}`);
+  const corpo=encodeURIComponent(txt);
+  window.open(`mailto:?subject=${sogg}&body=${corpo}`,'_blank');
+}
+function copiaAppunti(anno){
+  const txt=buildTesto(anno);
+  navigator.clipboard.writeText(txt)
+    .then(()=>showModal(`<div class="modal-title">✅ COPIATO</div><div class="note" style="text-align:center">Resoconto copiato negli appunti.</div><button class="btn am" onclick="closeModal()">OK</button>`))
+    .catch(()=>{});
+}
+
+// ── Esporta / Importa dati completi ──────────────────────────────
+function esportaDati(){
+  const payload={
+    tipo:'bilancio-eventi',
+    versione:'1.0.0',
+    esportatoIl:new Date().toISOString(),
+    categorie,
+    eventi
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='bilancio_eventi_'+new Date().toLocaleDateString('it-IT').replace(/\//g,'-')+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+let _pendingImport=null;
+function importaDati(ev){
+  const file=ev.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.tipo!=='bilancio-eventi') throw new Error('File non valido');
+      _pendingImport=d;
+      showModal(`
+        <div class="modal-title">IMPORTA DATI</div>
+        <div style="color:#fff;font-size:14px;margin-bottom:6px">File: <strong style="color:#ffe8a0">${esc(file.name)}</strong></div>
+        <div style="color:#888;font-size:13px;margin-bottom:16px">Esportato il ${new Date(d.esportatoIl).toLocaleString('it-IT')}.<br>Contiene ${(d.eventi||[]).length} eventi e ${(d.categorie||[]).length} categorie.</div>
+        <div style="color:#c47c00;font-size:12px;font-weight:700;margin-bottom:10px">Come vuoi procedere?</div>
+        <button class="btn am" style="margin-bottom:8px" onclick="_importa(false)">♻️ Sostituisci tutto</button>
+        <button class="btn out" style="margin-bottom:8px" onclick="_importaConferma()">🔀 Unisci (mantieni esistenti)</button>
+        <button class="btn gray" onclick="closeModal()">Annulla</button>`);
+    }catch(err){
+      showModal(`<div class="modal-title">ERRORE</div><div class="note">${esc(err.message)}</div><button class="btn am" onclick="closeModal()">OK</button>`);
+    }
+    ev.target.value='';
+  };
+  r.readAsText(file);
+}
+function _importa(unisci){
+  const d=_pendingImport;if(!d)return;
+  if(!unisci){
+    categorie=d.categorie||[];
+    eventi=d.eventi||[];
+  } else {
+    (d.categorie||[]).forEach(c=>{if(!categorie.includes(c))categorie.push(c);});
+    (d.eventi||[]).forEach(ev=>{
+      const idx=eventi.findIndex(e=>e.id===ev.id);
+      if(idx>=0) eventi[idx]=ev; else eventi.push(ev);
+    });
+  }
+  salva();
+  _pendingImport=null;
+  closeModal();render();
+  showModal(`<div class="modal-title">✅ IMPORTATO</div><div class="note" style="text-align:center">${unisci?'Dati uniti':'Dati sostituiti'} con successo.<br>${eventi.length} eventi, ${categorie.length} categorie.</div><button class="btn am" onclick="closeModal()">OK</button>`);
+}
+function _importaConferma(){
+  showModal(`
+    <div class="modal-title">UNISCI DATI</div>
+    <div class="note" style="margin-bottom:16px">Gli eventi con lo stesso ID verranno aggiornati. Gli altri verranno aggiunti. Le categorie esistenti verranno mantenute.</div>
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="_importa(true)">Conferma unione</button>
+    </div>`);
+}
+
+// ── Intestazione ──────────────────────────────────────────────────
+function aggAppbar(){
+  document.getElementById('appSub').textContent=getEnteSel()||intestazione[0]||'';
+  document.getElementById('appTitolo').textContent=titoloApp;
+  document.getElementById('appEmoji').textContent=emojiApp;
+}
+function apriIntestazione(){
+  _tmpLines=[...intestazione];
+  _tmpTitolo=titoloApp;
+  _tmpEmoji=emojiApp;
+  showModalIntestazione();
+}
+function showModalIntestazione(){
+  const righe=_tmpLines.map((line,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+      <div style="flex:1;position:relative">
+        <input class="hl-inp inp" type="text" maxlength="40" value="${esc(line)}"
+          style="padding-right:38px"
+          oninput="this.nextElementSibling.textContent=this.value.length+'/40'">
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#c47c00">${line.length}/40</span>
+      </div>
+      <button onclick="removeHL(${i})" style="background:#552222;border:none;color:#f99;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;flex-shrink:0">🗑️</button>
+    </div>`).join('');
+  showModal(`
+    <div class="modal-title">ENTI / INTESTAZIONE</div>
+    <div style="color:#888;font-size:11px;margin-bottom:10px">Ogni riga è un ente. Puoi filtrare eventi e bilancio per ente. Max 40 caratteri.</div>
+    ${righe}
+    <button onclick="addHL()" style="width:100%;padding:9px;border-radius:8px;border:2px dashed #3a3a50;background:transparent;color:#888;font-size:13px;cursor:pointer;margin-bottom:14px">➕ Aggiungi ente</button>
+    <div style="color:#c47c00;font-weight:700;font-size:12px;letter-spacing:2px;margin-bottom:6px">TITOLO APP</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input id="editTitolo" type="text" maxlength="32" value="${esc(_tmpTitolo)}"
+        class="inp" style="flex:1;font-weight:700">
+      <input id="editEmoji" type="text" maxlength="4" value="${esc(_tmpEmoji)}"
+        class="inp" style="width:60px;font-size:22px;text-align:center;flex-shrink:0">
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn gray sm" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn am sm" style="flex:1" onclick="salvaIntestazione()">Salva</button>
+    </div>`);
+  setTimeout(()=>document.querySelector('.hl-inp')?.focus(),100);
+}
+function addHL(){
+  _tmpLines=Array.from(document.querySelectorAll('.hl-inp')).map(i=>i.value);
+  _tmpTitolo=document.getElementById('editTitolo')?.value||_tmpTitolo;
+  _tmpEmoji=document.getElementById('editEmoji')?.value||_tmpEmoji;
+  _tmpLines.push('');
+  showModalIntestazione();
+}
+function removeHL(i){
+  _tmpLines=Array.from(document.querySelectorAll('.hl-inp')).map(x=>x.value);
+  _tmpTitolo=document.getElementById('editTitolo')?.value||_tmpTitolo;
+  _tmpEmoji=document.getElementById('editEmoji')?.value||_tmpEmoji;
+  _tmpLines.splice(i,1);
+  showModalIntestazione();
+}
+function salvaIntestazione(){
+  const vals=Array.from(document.querySelectorAll('.hl-inp')).map(i=>i.value.trim()).filter(l=>l);
+  intestazione=vals.length?vals:['Gruppo Sportivo Loranzé'];
+  const t=(document.getElementById('editTitolo')?.value||'').trim();
+  if(t) titoloApp=t;
+  const e=document.getElementById('editEmoji')?.value||'';
+  if(e) emojiApp=e;
+  salva();
+  aggAppbar();
+  closeModal();
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+function init(){
+  aggAppbar();
+  render();
+  leggiOPFS().then(backup=>{
+    if(backup && !localStorage.getItem('be_eventi')) applicaDati(backup);
+  });
+}
+// Esegui subito se DOM pronto, altrimenti aspetta
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const cfg = {
+  apiKey:"AIzaSyBRFTkp2u-7FlJVTYabWZwN2lXFMpZ1CvM",
+  authDomain:"bilancio-gruppo.firebaseapp.com",
+  projectId:"bilancio-gruppo",
+  storageBucket:"bilancio-gruppo.firebasestorage.app",
+  messagingSenderId:"908417134446",
+  appId:"1:908417134446:web:dfdbeabf3b35f61022db7f"
+};
+const app = initializeApp(cfg);
+const db  = getFirestore(app);
+const DOC = doc(db,'bilancio','dati');
+
+let _mioUltimoTs = ''; // ts dell'ultimo setDoc fatto da noi
+
+const fbSalva = async(dati)=>{
+  try{
+    window.setSyncStatus('saving');
+    const ts = new Date().toISOString();
+    await setDoc(DOC,{...dati, aggiornatoIl:ts});
+    _mioUltimoTs = ts;
+    localStorage.setItem('be_lastSave', ts);
+    window.setSyncStatus('ok');
+  }catch(e){
+    window.setSyncStatus('err');
+    console.warn('Firestore save error:',e);
+  }
+};
+
+// Registra funzione — esegue coda pendente se presente
+window._fbPronto(fbSalva);
+
+// Listener realtime
+let _primoSnap = true;
+onSnapshot(DOC, snap=>{
+  if(!snap.exists()){
+    // DB vuoto: salva i dati locali
+    fbSalva(window._getStato());
+    _primoSnap = false;
+    return;
+  }
+  const d = snap.data();
+  const remoto = d.aggiornatoIl||'';
+
+  if(_primoSnap){
+    _primoSnap = false;
+    const localeTs = localStorage.getItem('be_lastSave')||'';
+    if(remoto >= localeTs){
+      // Firestore è aggiornato: carica da remoto
+      _mioUltimoTs = remoto;
+      localStorage.setItem('be_lastSave', remoto);
+      window.applicaDati(d);
+      window.setSyncStatus('ok');
+    } else {
+      // Locale è più recente (es. modifiche fatte offline): salva su Firestore
+      _mioUltimoTs = '';
+      fbSalva(window._getStato());
+    }
+    return;
+  }
+
+  // Aggiornamenti successivi: ignora i nostri echo, applica gli altri
+  if(remoto !== _mioUltimoTs){
+    _mioUltimoTs = remoto;
+    window.applicaDati(d);
+    window.setSyncStatus('ok');
+  }
+}, ()=>window.setSyncStatus('err'));
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
