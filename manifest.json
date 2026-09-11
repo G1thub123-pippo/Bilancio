@@ -1,0 +1,17 @@
+{
+  "name": "Bilancio Eventi",
+  "short_name": "Bilancio",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f4fa",
+  "theme_color": "#1a56db",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
